@@ -168,3 +168,5 @@ rebel.xml
 
 data/
 logs/
+nohup.out
+config.json
