@@ -7,13 +7,14 @@
 """
 import enum
 
-class LLMType(enum.Enum):
-    GLM = "ChatGLM4", "GLM_REFRESH_TOKEN"
-    QWEN = " 通义千问", "LOGIN_TONGYI_TICKET"
 
-    def __init__(self, desc, env_name_token):
+class LLMType(enum.Enum):
+    GLM = "ChatGLM4", ""
+    QWEN = "通义千问", ""
+
+    def __init__(self, desc, placeholder):
         self._desc = desc
-        self._env_name_token = env_name_token
+        self._placeholder = placeholder
 
     @property
     def desc(self):
@@ -23,7 +24,6 @@ class LLMType(enum.Enum):
     def env_name_base_url(self):
         return f"{self.name}_FREE_API_BASE_URL"
 
-
     @property
     def env_name_token(self):
-        return self._env_name_token
+        return f"{self.name}_FREE_API_TOKEN"

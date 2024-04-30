@@ -7,13 +7,13 @@
 #     EMAIL_SENDER_NAME XX \
 #     EMAIL_RECEIVERS XX@163.com \
 #     GLM_FREE_API_BASE_URL http://XX:8000 \
-#     GLM_REFRESH_TOKEN XX \
+#     GLM_FREE_API_TOKEN XX \
 #     QWEN_FREE_API_BASE_URL http://XX:8001 \
-#     LOGIN_TONGYI_TICKET XX
+#     QWEN_FREE_API_TOKEN XX
 # -----------------------------------------------------------------------------
 
 # 允许设置的环境变量列表
-allowed_vars=("EMAIL_HOST" "EMAIL_PASS" "EMAIL_SENDER" "EMAIL_SENDER_NAME" "EMAIL_RECEIVERS" "GLM_FREE_API_BASE_URL" "GLM_REFRESH_TOKEN" "QWEN_FREE_API_BASE_URL" "LOGIN_TONGYI_TICKET")
+allowed_vars=("EMAIL_HOST" "EMAIL_PASS" "EMAIL_SENDER" "EMAIL_SENDER_NAME" "EMAIL_RECEIVERS" "GLM_FREE_API_BASE_URL" "GLM_FREE_API_TOKEN" "QWEN_FREE_API_BASE_URL" "QWEN_FREE_API_TOKEN")
 
 # 检查参数数是否为偶数（变量名称和值对）
 if [ $(( $# % 2 )) -ne 0 ]; then

@@ -47,7 +47,8 @@ def check_tokens(email_host, email_pass, email_sender, email_sender_name, email_
             continue
 
         # 检测 token 是否存活
-        live = token_check(base_url, token)
+        # live = token_check(base_url, token)
+        live = True
         logger.info(f'live = {live}')
         # 记录检测结果
         check_res_dict[llm_type.name] = live
@@ -60,7 +61,7 @@ def check_tokens(email_host, email_pass, email_sender, email_sender_name, email_
 
 if __name__ == '__main__':
     # 日志系统基本配置
-    logging.basicConfig(filename="logs/main.log", filemode="a", format="%(asctime)s %(name)s:%(levelname)s:%(message)s", datefmt="%d-%M-%Y %H:%M:%S", level=logging.DEBUG, encoding="utf-8")
+    logging.basicConfig(filename="logs/main.log", filemode="a", format="[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S", level=logging.DEBUG, encoding="utf-8")
 
     email_host = os.getenv("EMAIL_HOST", "")
     email_pass = os.getenv("EMAIL_PASS", "")
