@@ -30,5 +30,6 @@ sh ${BASE_DIR}/scripts/start.sh EMAIL_HOST smtp.qq.com \
 - `QWEN_FREE_API_TOKEN`: 调用`qwen-free-api`服务的接口时传入的`token`（目前只支持单账号）
 
 ## TODO
-- [] 支持多账号的存活检测
-- [] 支持`kimi-free-api`、`spark-free-api`
+- [x] 支持多账号的存活检测
+- [ ] 支持`kimi-free-api`、`spark-free-api`
+- [ ] 提供`docker`部署方式

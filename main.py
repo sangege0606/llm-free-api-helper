@@ -47,18 +47,22 @@ def check_tokens():
     for llm_type in LLMType:
         # 读取配置的 base_url、token
         base_url = os.getenv(f"{llm_type.env_name_base_url}", "")
-        token = os.getenv(f"{llm_type.env_name_token}", "")
-        logger.info(f'llm_type = {llm_type.name}, base_url = {base_url}, token = {token}')
-        # 如果有任何一个为空，则跳过
-        if not base_url or not token:
-            logger.info('跳过检测')
-            continue
+        origin_token_list = os.getenv(f"{llm_type.env_name_token}", "").split(',')
+        # 全部元素去除前后空格，再去除空的元素
+        token_list = [origin_token.strip() for origin_token in origin_token_list if origin_token and origin_token.strip()]
+        # 遍历 token
+        for token in token_list:
+            logger.info(f'llm_type = {llm_type.name}, base_url = {base_url}, token = {token}')
+            # 如果有任何一个为空，则跳过
+            if not base_url or not token:
+                logger.info('跳过检测')
+                continue
 
-        # 检测 token 是否存活
-        live = token_check(base_url, token)
-        logger.info(f'live = {live}')
-        # 记录检测结果
-        check_res_dict[llm_type.name] = live
+            # 检测 token 是否存活
+            live = token_check(base_url, token)
+            logger.info(f'live = {live}')
+            # 记录检测结果
+            check_res_dict[f'[{llm_type.name}]{token}'] = live
     # 发送邮件
     mail = my_email_util.Mail(email_host, email_pass, email_sender, email_sender_name)
     # 使用json.dumps()格式化输出
