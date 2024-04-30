@@ -47,8 +47,7 @@ def check_tokens(email_host, email_pass, email_sender, email_sender_name, email_
             continue
 
         # 检测 token 是否存活
-        # live = token_check(base_url, token)
-        live = True
+        live = token_check(base_url, token)
         logger.info(f'live = {live}')
         # 记录检测结果
         check_res_dict[llm_type.name] = live
