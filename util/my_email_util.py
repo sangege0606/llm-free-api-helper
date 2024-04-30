@@ -5,11 +5,14 @@
 @Date    ：2023/10/21 13:04 
 """
 import base64
+import logging
 import os
 import smtplib
 from email.header import Header
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+
+logger = logging.getLogger(__name__)
 
 
 class Mail:
@@ -61,10 +64,10 @@ class Mail:
             smtpObj.login(self.sender, self.mail_pass)  # 登陆
             smtpObj.sendmail(self.sender, receivers, message.as_string())  # 发送
             smtpObj.quit()
-            print('邮件发送成功！！')
+            logger.info('邮件发送成功！')
         except smtplib.SMTPException as e:
-            print(e.__traceback__.tb_lineno, e)
-            print('邮件发送失败！！')
+            logger.error(e.__traceback__.tb_lineno, e)
+            logger.info('邮件发送失败！')
 
 
 if __name__ == '__main__':
