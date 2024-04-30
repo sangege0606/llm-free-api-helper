@@ -28,11 +28,19 @@ def token_check(base_url, token):
     return resp['live']
 
 
-def check_tokens(email_host, email_pass, email_sender, email_sender_name, email_receivers):
+def check_tokens():
     """
     检测各个 token 是否存活
     :return:
     """
+    email_host = os.getenv("EMAIL_HOST", "")
+    email_pass = os.getenv("EMAIL_PASS", "")
+    # 发送邮箱
+    email_sender = os.getenv("EMAIL_SENDER", "")
+    email_sender_name = os.getenv("EMAIL_SENDER_NAME", "")
+    # 接收邮箱，多个用英文逗号分隔
+    email_receivers = os.getenv("EMAIL_RECEIVERS", "")
+
     # 检测结果字典
     check_res_dict = {}
     # 遍历LLM类型
@@ -62,13 +70,5 @@ if __name__ == '__main__':
     # 日志系统基本配置
     logging.basicConfig(filename="logs/main.log", filemode="a", format="[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S", level=logging.DEBUG, encoding="utf-8")
 
-    email_host = os.getenv("EMAIL_HOST", "")
-    email_pass = os.getenv("EMAIL_PASS", "")
-    # 发送邮箱
-    email_sender = os.getenv("EMAIL_SENDER", "")
-    email_sender_name = os.getenv("EMAIL_SENDER_NAME", "")
-    # 接收邮箱，多个用英文逗号分隔
-    email_receivers = os.getenv("EMAIL_RECEIVERS", "")
-
     # 检测各个 token 是否存活
-    check_tokens(email_host, email_pass, email_sender, email_sender_name, email_receivers)
+    check_tokens()
