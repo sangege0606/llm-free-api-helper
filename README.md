@@ -1,9 +1,9 @@
 # llm-free-api-helper
-提供`LLM-Red-Team`开发的一系列`free-api`项目的一些辅助功能
+提供[LLM-Red-Team](https://github.com/LLM-Red-Team)开发的一系列`free-api`项目的一些辅助功能
 
 
 ## 使用
-部署`LLM-Red-Team`开发的一系列`free-api`项目之后，自己写定时任务（或者使用`1panel`等管理面板）执行该`Shell`脚本。
+部署[LLM-Red-Team](https://github.com/LLM-Red-Team)开发的一系列`free-api`项目之后，自己写定时任务（或者使用`1panel`等管理面板）执行该`Shell`脚本。
 
 注意：1、替换其中的变量值；2、不要频繁（小于10分钟）执行
 ```shell
@@ -31,5 +31,5 @@ sh ${BASE_DIR}/scripts/start.sh EMAIL_HOST smtp.qq.com \
 
 ## TODO
 - [x] 支持多账号的存活检测
-- [ ] 支持`kimi-free-api`、`spark-free-api`
+- [x] 支持`kimi-free-api`、`spark-free-api`、`metaso-free-api`
 - [ ] 提供`docker`部署方式

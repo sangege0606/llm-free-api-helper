@@ -9,8 +9,11 @@ import enum
 
 
 class LLMType(enum.Enum):
-    GLM = "ChatGLM4", ""
+    GLM = "智谱清言", ""
     QWEN = "通义千问", ""
+    KIMI = "Moonshot AI", ""
+    SPARK = "讯飞星火", ""
+    METASO = "秘塔AI", ""
 
     def __init__(self, desc, placeholder):
         self._desc = desc
