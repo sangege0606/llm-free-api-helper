@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 """
-@Author  ：sangea
+@Author  ：sangea0606
 @Date    ：2023/10/21 13:04 
 """
 import base64
@@ -71,6 +71,6 @@ class Mail:
 
 
 if __name__ == '__main__':
-    mail = Mail('smtp.qq.com', 'zswdekwrgtnbgej', '802203474@qq.com', 'sangea')
+    mail = Mail('smtp.qq.com', 'zswdekwrgtnbgej', '802203474@qq.com', 'sangea0606')
     mail.send(['sangea0606@163.com'], '这是主题', '这是文本内容')
     # mail.send(['sangea0606@163.com'], '这是主题', '这是文本内容', r"E:\data\smt\2023-10-21.xls")

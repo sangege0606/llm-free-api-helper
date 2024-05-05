@@ -1,26 +1,13 @@
 #!/bin/bash
 # -----------------------------------------------------------------------------
 # Description: 在venv虚拟环境中安装依赖，设置环境变量，并运行main.py
-# Usage: sh ./start.sh EMAIL_HOST smtp.qq.com \
-#     EMAIL_PASS XX \
-#     EMAIL_SENDER XX@qq.com \
-#     EMAIL_SENDER_NAME XX \
-#     EMAIL_RECEIVERS XX@163.com \
-#     GLM_FREE_API_BASE_URL http://XX:8000 \
-#     GLM_FREE_API_TOKEN XX \
-#     QWEN_FREE_API_BASE_URL http://XX:8001 \
-#     QWEN_FREE_API_TOKEN XX
-#     KIMI_FREE_API_BASE_URL http://XX:8002 \
-#     KIMI_FREE_API_TOKEN XX \
-#     SPARK_FREE_API_BASE_URL http://XX:8003 \
-#     SPARK_FREE_API_TOKEN XX \
-#     METASO_FREE_API_BASE_URL http://XX:8004 \
-#     METASO_FREE_API_TOKEN XX
+# Usage: 见`README.md`
 # -----------------------------------------------------------------------------
 
 # 允许设置的环境变量列表
 allowed_vars=("EMAIL_HOST" "EMAIL_PASS" "EMAIL_SENDER" "EMAIL_SENDER_NAME" "EMAIL_RECEIVERS" "GLM_FREE_API_BASE_URL" "GLM_FREE_API_TOKEN" "QWEN_FREE_API_BASE_URL" "QWEN_FREE_API_TOKEN"
-  "KIMI_FREE_API_BASE_URL" "KIMI_FREE_API_TOKEN" "SPARK_FREE_API_BASE_URL" "SPARK_FREE_API_TOKEN" "METASO_FREE_API_BASE_URL" "METASO_FREE_API_TOKEN")
+  "KIMI_FREE_API_BASE_URL" "KIMI_FREE_API_TOKEN" "SPARK_FREE_API_BASE_URL" "SPARK_FREE_API_TOKEN" "METASO_FREE_API_BASE_URL" "METASO_FREE_API_TOKEN" "SCHEDULE_TYPE" "SCHEDULE_JOB_INTERVAL"
+  "SCHEDULE_JOB_SPECIFIC_TIME")
 
 # 检查参数数是否为偶数（变量名称和值对）
 if [ $(( $# % 2 )) -ne 0 ]; then

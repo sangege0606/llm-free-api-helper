@@ -1,0 +1,28 @@
+version: '3.0'
+
+services:
+  llm-free-api-helper:
+    image: sangea0606/llm-free-api-helper
+    container_name: llm-free-api-helper
+    restart: always
+    volumes:
+      - ./logs:/app/logs
+    environment:
+      TZ: Asia/Shanghai
+      EMAIL_HOST: 'XX'
+      EMAIL_PASS: 'XX'
+      EMAIL_SENDER: 'XX@qq.com'
+      EMAIL_SENDER_NAME: 'XX'
+      EMAIL_RECEIVERS: 'XX@163.com'
+      GLM_FREE_API_BASE_URL: 'http://XX:8000'
+      GLM_FREE_API_TOKEN: 'XX'
+      QWEN_FREE_API_BASE_URL: 'http://XX:8001'
+      QWEN_FREE_API_TOKEN: 'XX'
+      KIMI_FREE_API_BASE_URL: 'http://XX:8002'
+      KIMI_FREE_API_TOKEN: 'XX'
+      SPARK_FREE_API_BASE_URL: 'http://XX:8003'
+      SPARK_FREE_API_TOKEN: 'XX'
+      METASO_FREE_API_BASE_URL: 'http://XX:8004'
+      METASO_FREE_API_TOKEN: 'XX'
+      SCHEDULE_TYPE: 'specific_time'
+      SCHEDULE_JOB_SPECIFIC_TIME: '08:00'
