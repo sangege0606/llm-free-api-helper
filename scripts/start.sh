@@ -5,7 +5,7 @@
 # -----------------------------------------------------------------------------
 
 # 允许设置的环境变量列表
-allowed_vars=("EMAIL_HOST" "EMAIL_PASS" "EMAIL_SENDER" "EMAIL_SENDER_NAME" "EMAIL_RECEIVERS" "GLM_FREE_API_BASE_URL" "GLM_FREE_API_TOKEN" "QWEN_FREE_API_BASE_URL" "QWEN_FREE_API_TOKEN"
+allowed_vars=("PYTHON_PATH" "EMAIL_HOST" "EMAIL_PASS" "EMAIL_SENDER" "EMAIL_SENDER_NAME" "EMAIL_RECEIVERS" "GLM_FREE_API_BASE_URL" "GLM_FREE_API_TOKEN" "QWEN_FREE_API_BASE_URL" "QWEN_FREE_API_TOKEN"
   "KIMI_FREE_API_BASE_URL" "KIMI_FREE_API_TOKEN" "SPARK_FREE_API_BASE_URL" "SPARK_FREE_API_TOKEN" "METASO_FREE_API_BASE_URL" "METASO_FREE_API_TOKEN" "SCHEDULE_TYPE" "SCHEDULE_JOB_INTERVAL"
   "SCHEDULE_JOB_SPECIFIC_TIME")
 
@@ -16,11 +16,36 @@ if [ $(( $# % 2 )) -ne 0 ]; then
     exit 1
 fi
 
+# 获取所有参数
+params=("$@")
+
+# 声明一个关联数组（即字典）
+declare -A params_dict
+
+# 循环遍历参数，将它们存入关联数组
+for (( i=0; i<${#params[@]}; i+=2 )); do
+    key="${params[$i]}"
+    value="${params[$i+1]}"
+    params_dict["$key"]="$value"
+done
+
+# 如果`PYTHON_PATH`参数不存在或者值为空串，则设置为系统使用的`Python3`解释器
+if [[ -z "${params_dict["PYTHON_PATH"]}" ]]; then
+    echo "未设置PYTHON_PATH环境变量，正在设置PYTHON_PATH环境变量为系统使用的Python3解释器"
+    params_dict["PYTHON_PATH"]="$(which python3)"
+fi
+
 # 切换到脚本所在目录的上一级目录
 cd `dirname $0`/..
 # 设置并导出环境变量BASE_DIR，其值为当前的工作目录
 export BASE_DIR=`pwd`
 echo "当前的工作目录：$BASE_DIR"
+
+# 检查venv目录是否存在，如果不存在，则创建虚拟环境
+if [ ! -d "venv" ]; then
+  echo "正在创建虚拟环境..."
+  ${params_dict["PYTHON_PATH"]} -m venv venv
+fi
 
 echo "正在激活虚拟环境..."
 source ${BASE_DIR}/venv/bin/activate
@@ -29,18 +54,13 @@ echo "正在安装依赖包..."
 pip install -r ${BASE_DIR}/requirements.txt
 
 echo "正在设置环境变量..."
-# 处理每对参数
-while [ $# -gt 0 ]; do
-    var_name=$1
-    var_value=$2
-    shift 2
-
+for key in "${!params_dict[@]}"; do
     # 检查变量名称是否在允许列表中
-    if [[ " ${allowed_vars[*]} " =~ " ${var_name} " ]]; then
-        export $var_name="$var_value"
-        echo "Set $var_name to $(printenv $var_name)"
+    if [[ " ${allowed_vars[*]} " =~ " ${key} " ]]; then
+        export "$key"="${params_dict[${key}]}"
+        echo "Set $key to ${params_dict[${key}]}"
     else
-        echo "Warning: $var_name 不是允许的环境变量."
+        echo "Warning: $key 不是允许的环境变量."
     fi
 done
 

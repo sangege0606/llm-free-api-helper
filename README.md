@@ -8,6 +8,7 @@
 
 ## 使用
 环境变量说明：
+- `PYTHON_PATH`: `Python`解释器的路径（建议使用`Python 3.12`），默认为系统使用的`Python3`解释器。示例：`/usr/bin/python3.12`
 - `EMAIL_HOST`: 发送邮箱的服务器。示例：`smtp.qq.com`
 - `EMAIL_PASS`: 邮箱密码
 - `EMAIL_SENDER`: 发送邮箱
@@ -32,7 +33,8 @@
 - 执行该`Shell`脚本。
   ```shell
   #!/bin/bash
-  sh ${BASE_DIR}/scripts/start.sh EMAIL_HOST smtp.qq.com \
+  sh ${BASE_DIR}/scripts/start.sh PYTHON_PATH /usr/bin/python3.12 \
+      EMAIL_HOST smtp.qq.com \
       EMAIL_PASS XX \
       EMAIL_SENDER XX@qq.com \
       EMAIL_SENDER_NAME XX \
@@ -94,7 +96,7 @@
     ```
 
 ### docker-compose部署
-- 部署[LLM-Red-Team](https://github.com/LLM-Red-Team)开发的一系列`free-api`项目之
+- 部署[LLM-Red-Team](https://github.com/LLM-Red-Team)开发的一系列`free-api`项目
 - 执行该`docker-compose`命令。
   ```shell
   docker compose up -d

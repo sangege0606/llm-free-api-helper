@@ -6,6 +6,7 @@ import time
 import requests
 import schedule
 
+from enum_schedule_type import ScheduleType
 from enum_llm_type import LLMType
 from util import my_email_util
 
@@ -27,7 +28,8 @@ def token_check(base_url, token):
     )
     resp = response.json();
     logger.info(f'call function [token_check], token = {token}, resp = {resp}')
-    return resp['live']
+    # 返回'live'字段的值，如果不存在，则返回'message'字段的值
+    return resp.get('live', resp.get('message'))
 
 
 def check_tokens():
@@ -35,10 +37,6 @@ def check_tokens():
     检测各个 token 是否存活
     :return:
     """
-    if True:
-        logger.info('check_tokens start...')
-        return
-
     email_host = os.getenv("EMAIL_HOST", "")
     email_pass = os.getenv("EMAIL_PASS", "")
     # 发送邮箱
@@ -91,13 +89,14 @@ if __name__ == '__main__':
 
     # 根据环境变量配置定时任务
     logger.info(f"配置的定时任务类型为:{schedule_type}")
-    if schedule_type == 'interval':
+    schedule_type_enum = ScheduleType.match_name(schedule_type)
+    if schedule_type_enum == ScheduleType.INTERVAL:
         # 按时间间隔执行
-        interval = int(os.getenv('SCHEDULE_JOB_INTERVAL', 3600))  # 获取环境变量，默认间隔为3600秒
+        interval = int(os.getenv(schedule_type_enum.env_name_of_value, 3600))  # 获取环境变量，默认间隔为3600秒
         schedule.every(interval).seconds.do(check_tokens)
-    elif schedule_type == 'specific_time':
+    elif schedule_type_enum == ScheduleType.SPECIFIC_TIME:
         # 在指定时间执行
-        specific_time = os.getenv('SCHEDULE_JOB_SPECIFIC_TIME', '08:00')  # 获取环境变量，默认时间为"08:00"
+        specific_time = os.getenv(schedule_type_enum.env_name_of_value, '08:00')  # 获取环境变量，默认时间为"08:00"
         schedule.every().day.at(specific_time).do(check_tokens)
         # 下次执行时间
         # next_run = schedule.next_run()
