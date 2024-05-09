@@ -8,28 +8,9 @@ import schedule
 
 from enum_schedule_type import ScheduleType
 from enum_llm_type import LLMType
-from util import my_email_util
+from util import my_email_util, llm_free_api_util
 
 logger = logging.getLogger(__name__)
-
-
-def token_check(base_url, token):
-    """
-    检测refresh_token是否存活，如果存活live为true，否则为false，请不要频繁（小于10分钟）调用此接口。
-    :param base_url:
-    :param token:
-    :return:
-    """
-    response = requests.post(
-        url=f'{base_url}/token/check',
-        json={
-            "token": token
-        }
-    )
-    resp = response.json();
-    logger.info(f'call function [token_check], token = {token}, resp = {resp}')
-    # 返回'live'字段的值，如果不存在，则返回'message'字段的值
-    return resp.get('live', resp.get('message'))
 
 
 def check_tokens():
@@ -47,31 +28,74 @@ def check_tokens():
 
     # 检测结果字典
     check_res_dict = {}
-    # 遍历LLM类型
-    for llm_type in LLMType:
-        # 读取配置的 base_url、token
-        base_url = os.getenv(f"{llm_type.env_name_base_url}", "")
-        origin_token_list = os.getenv(f"{llm_type.env_name_token}", "").split(',')
-        # 全部元素去除前后空格，再去除空的元素
-        token_list = [origin_token.strip() for origin_token in origin_token_list if origin_token and origin_token.strip()]
-        # 遍历 token
-        for token in token_list:
-            logger.info(f'llm_type = {llm_type.name}, base_url = {base_url}, token = {token}')
-            # 如果有任何一个为空，则跳过
-            if not base_url or not token:
-                logger.info('跳过检测')
+
+    # 获取环境变量中的`ONE_API_BASE_URL`
+    one_api_base_url = os.getenv("ONE_API_BASE_URL", "")
+    # 如果`ONE_API_BASE_URL`不为空，则调用`one_api`服务的`/api/channel/{channel_id}`接口获取各个`free-api`服务的`baseUrl`、`token`，并检测`token`是否存活
+    if one_api_base_url:
+        logger.info(f'one_api_base_url = {one_api_base_url}')
+        # 获取环境变量中的`ONE_API_TOKEN`
+        one_api_token = os.getenv("ONE_API_TOKEN", "")
+        if not one_api_token:
+            logger.error('`ONE_API_BASE_URL`不为空时，`ONE_API_TOKEN`不能为空！')
+            return
+
+        # 遍历LLM类型
+        for llm_type in LLMType:
+            logger.info(f'llm_type = {llm_type.name}')
+            # 获取当前llm_type的`channel_id`
+            channel_id = os.getenv(llm_type.env_name_one_api_channel_id, '')
+            if not channel_id:
+                logger.error(f'未配置`{llm_type.env_name_one_api_channel_id}`，跳过检测')
                 continue
 
-            # 检测 token 是否存活
-            live = token_check(base_url, token)
-            logger.info(f'live = {live}')
-            # 记录检测结果
-            check_res_dict[f'[{llm_type.name}]{token}'] = live
+            # 调用`one_api`服务的`/api/channel/{channel_id}`接口获取`baseUrl`、`token`
+            headers = {
+                'Authorization': f'Bearer {one_api_token}'
+            }
+            response = requests.get(f'{one_api_base_url}/api/channel/{channel_id}', headers=headers)
+            resp = response.json()
+            logger.info(f'call API [{one_api_base_url}/api/channel/{channel_id}], resp = {resp}')
+            resp_data = resp.get('data', {})
+            base_url = resp_data.get('base_url', '')
+            origin_token_list = resp_data.get('key', '').split(',')
+            check_one_llm_type_tokens(llm_type, base_url, origin_token_list, check_res_dict)
+    else:
+        # 遍历LLM类型
+        for llm_type in LLMType:
+            # 读取配置的 base_url、token
+            base_url = os.getenv(f"{llm_type.env_name_base_url}", "")
+            origin_token_list = os.getenv(f"{llm_type.env_name_token}", "").split(',')
+            check_one_llm_type_tokens(llm_type, base_url, origin_token_list, check_res_dict)
+
     # 发送邮件
     mail = my_email_util.Mail(email_host, email_pass, email_sender, email_sender_name)
     # 使用json.dumps()格式化输出
     check_res_str = json.dumps(check_res_dict, indent=4)
     mail.send(email_receivers.split(','), f'【llm-free-api-helper】token_check_res', check_res_str)
+
+
+def check_one_llm_type_tokens(llm_type: LLMType, base_url: str, origin_token_list: list[str], check_res_dict: dict):
+    # 如果`base_url`为空，则跳过检测
+    if not base_url:
+        logger.info('`base_url`为空，跳过检测')
+        return
+
+    # 全部元素去除前后空格，再去除空的元素
+    token_list = [origin_token.strip() for origin_token in origin_token_list if origin_token and origin_token.strip()]
+    # 遍历 token
+    for token in token_list:
+        logger.info(f'llm_type = {llm_type.name}, base_url = {base_url}, token = {token}')
+        # 如果`token`为空，则跳过检测
+        if not token:
+            logger.info('`token`为空，跳过检测')
+            continue
+
+        # 检测 token 是否存活
+        live = llm_free_api_util.token_check(base_url, token)
+        logger.info(f'live = {live}')
+        # 记录检测结果
+        check_res_dict[f'[{llm_type.name}]{token}'] = live
 
 
 if __name__ == '__main__':

@@ -6,8 +6,10 @@
 
 # 允许设置的环境变量列表
 allowed_vars=("PYTHON_PATH" "EMAIL_HOST" "EMAIL_PASS" "EMAIL_SENDER" "EMAIL_SENDER_NAME" "EMAIL_RECEIVERS" "GLM_FREE_API_BASE_URL" "GLM_FREE_API_TOKEN" "QWEN_FREE_API_BASE_URL" "QWEN_FREE_API_TOKEN"
-  "KIMI_FREE_API_BASE_URL" "KIMI_FREE_API_TOKEN" "SPARK_FREE_API_BASE_URL" "SPARK_FREE_API_TOKEN" "METASO_FREE_API_BASE_URL" "METASO_FREE_API_TOKEN" "SCHEDULE_TYPE" "SCHEDULE_JOB_INTERVAL"
-  "SCHEDULE_JOB_SPECIFIC_TIME")
+  "KIMI_FREE_API_BASE_URL" "KIMI_FREE_API_TOKEN" "SPARK_FREE_API_BASE_URL" "SPARK_FREE_API_TOKEN" "METASO_FREE_API_BASE_URL" "METASO_FREE_API_TOKEN"
+  "ONE_API_BASE_URL" "ONE_API_TOKEN" "ONE_API_GLM_FREE_API_CHANNEL_ID" "ONE_API_QWEN_FREE_API_CHANNEL_ID" "ONE_API_KIMI_FREE_API_CHANNEL_ID" "ONE_API_SPARK_FREE_API_CHANNEL_ID"
+  "ONE_API_METASO_FREE_API_CHANNEL_ID"
+  "SCHEDULE_TYPE" "SCHEDULE_JOB_INTERVAL" "SCHEDULE_JOB_SPECIFIC_TIME")
 
 # 检查参数数是否为偶数（变量名称和值对）
 if [ $(( $# % 2 )) -ne 0 ]; then
@@ -67,11 +69,11 @@ done
 # echo "列出当前的环境变量值..."
 # export -p
 
-# 检查是否存在nohup.out日志输出文件
-if [ ! -f "${BASE_DIR}/nohup.out" ]; then
-  # 如果不存在，则创建nohup.out文件
-  echo "创建 ${BASE_DIR}/nohup.out 文件..."
-  touch "${BASE_DIR}/nohup.out"
+# 检查是否存在nohup.log日志输出文件
+if [ ! -f "${BASE_DIR}/nohup.log" ]; then
+  # 如果不存在，则创建nohup.log文件
+  echo "创建 ${BASE_DIR}/nohup.log 文件..."
+  touch "${BASE_DIR}/nohup.log"
 fi
 
 echo "正在执行python脚本"

@@ -30,3 +30,7 @@ class LLMType(enum.Enum):
     @property
     def env_name_token(self):
         return f"{self.name}_FREE_API_TOKEN"
+
+    @property
+    def env_name_one_api_channel_id(self):
+        return f"ONE_API_{self.name}_FREE_API_CHANNEL_ID"
