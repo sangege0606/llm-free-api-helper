@@ -24,10 +24,11 @@ VOLUME ["/app/logs"]
 RUN pip install -r requirements.txt
     
 # 暴露出外界访问容器的端口
-# EXPOSE 5033
+EXPOSE 8000
  
 # 假设main.py是项目启动入口, 
-# ENTRYPOINT 和 CMD 指令均可用于指定容器启动时要运行的命令, 
-# 区别在于 CMD 命令可以被 docker run命令覆盖
-ENTRYPOINT ["python", "main.py"]
+# ENTRYPOINT 和 CMD 均可用于指定容器启动时要运行的命令,
+# 区别在于 CMD 命令容易被 docker run命令覆盖，而 ENTRYPOINT 命令不容易被覆盖（需要使用 --entrypoint） 。
+# ENTRYPOINT ["python", "main.py"]
 # CMD ["python", "main.py"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -26,11 +26,11 @@ app = FastAPI()
 #     'max_instances': 3
 # }
 # scheduler = BackgroundScheduler(jobstores=jobstores, executors=executors, job_defaults=job_defaults, timezone='Asia/Shanghai')
+# 设置调度器的时区为“Asia/Shanghai”。这意味着所有的时间计算和任务触发都将基于这个时区。
 scheduler = AsyncIOScheduler(timezone='Asia/Shanghai')
 
 # 日志记录器
 logger = logging.getLogger(__name__)
-
 
 @app.on_event("startup")
 def startup_event():
@@ -44,8 +44,8 @@ def startup_event():
         # 如果这里写`exit(0)`，且`docker-compose.yml`中`restart`的值为`always`，就会一直重启容器，导致重复执行main.py
         return
 
-    # 否则，使用环境变量`SCHEDULE_CRON`配置定时任务
-    scheduler.add_job(check_tokens, CronTrigger.from_crontab(schedule_cron))
+    # 否则，使用环境变量`SCHEDULE_CRON`配置定时任务 todo 这里不设置job_id的话，reschedule_job()会报错：'No job by the id of 4a1e3eada86143efb1ef74bc10da2607 was found'
+    scheduler.add_job(check_tokens, trigger=CronTrigger.from_crontab(schedule_cron), id='main#check_tokens')
     # 启动定时任务
     scheduler.start()
 
@@ -161,8 +161,13 @@ async def task_list():
 
 @app.get("/task_update")
 async def task_update(job_id: str, schedule_cron: str):
-    # todo 不知道为什么报错：`'No job by the id of 4a1e3eada86143efb1ef74bc10da2607 was found'`
-    scheduler.modify_job(job_id, CronTrigger.from_crontab(schedule_cron))
+    logger.info(f'API [/task_update] called, job_id = {job_id}, schedule_cron = {schedule_cron}')
+    # 打印所有任务的job_id
+    # job_ids = [job.id for job in scheduler.get_jobs()]
+    # print(f'job_ids = {job_ids}')
+
+    # todo 如果添加定时任务时未手动设置id，这里会报错：'No job by the id of 4a1e3eada86143efb1ef74bc10da2607 was found'
+    scheduler.reschedule_job(job_id=job_id, trigger=CronTrigger.from_crontab(schedule_cron))
     return {"msg": "task 已更新"}
 
 
@@ -201,6 +206,5 @@ if __name__ == '__main__':
 
     # 日志系统基本配置
     logging.basicConfig(filename="logs/main.log", filemode="a", format="[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S", level=logging.DEBUG, encoding="utf-8")
-    # 启动 uvicorn
-    # uvicorn.run(app='main:app', host="127.0.0.1", port=8000, reload=True, reload_excludes=["*.log"])
-    uvicorn.run(app='main:app', host="127.0.0.1", port=8000)
+    # 启动 uvicorn。注：docker部署，host需要配置为"0.0.0.0"
+    uvicorn.run(app='main:app', host="0.0.0.0", port=8000, reload=True, reload_excludes=["*.log"])
