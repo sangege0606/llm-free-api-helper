@@ -1,18 +1,62 @@
 import json
 import logging
 import os
-import time
 
 import requests
-import schedule
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
+from fastapi import FastAPI
 
-from enum_schedule_type import ScheduleType
 from enum_llm_type import LLMType
 from util import my_email_util, llm_free_api_util
 
+app = FastAPI()
+
+# 调度器 todo 持久化
+# jobstores = {
+#     'mongo': MongoDBJobStore(),
+#     'default': SQLAlchemyJobStore(url='sqlite:///jobs.sqlite')
+# }
+# executors = {
+#     'default': ThreadPoolExecutor(20),
+#     'processpool': ProcessPoolExecutor(5)
+# }
+# job_defaults = {
+#     'coalesce': False,
+#     'max_instances': 3
+# }
+# scheduler = BackgroundScheduler(jobstores=jobstores, executors=executors, job_defaults=job_defaults, timezone='Asia/Shanghai')
+scheduler = AsyncIOScheduler(timezone='Asia/Shanghai')
+
+# 日志记录器
 logger = logging.getLogger(__name__)
 
 
+@app.on_event("startup")
+def startup_event():
+    logger.info('startup_event')
+    # 获取环境变量`SCHEDULE_CRON`
+    schedule_cron = os.getenv('SCHEDULE_CRON')
+    # 如果没有配置环境变量`SCHEDULE_CRON`，则只执行一次
+    if not schedule_cron:
+        logger.info("没有配置环境变量`SCHEDULE_CRON`，只执行一次")
+        check_tokens()
+        # 如果这里写`exit(0)`，且`docker-compose.yml`中`restart`的值为`always`，就会一直重启容器，导致重复执行main.py
+        return
+
+    # 否则，使用环境变量`SCHEDULE_CRON`配置定时任务
+    scheduler.add_job(check_tokens, CronTrigger.from_crontab(schedule_cron))
+    # 启动定时任务
+    scheduler.start()
+
+
+@app.get("/")
+def read_root():
+    logger.info('API [/] called')
+    return {"Hello": "World"}
+
+
+@app.get("/check_tokens")
 def check_tokens():
     """
     检测各个 token 是否存活
@@ -98,41 +142,65 @@ def check_one_llm_type_tokens(llm_type: LLMType, base_url: str, origin_token_lis
         check_res_dict[f'[{llm_type.name}]{token}'] = live
 
 
+@app.get("/task_list")
+async def task_list():
+    jobs = scheduler.get_jobs()
+    jobs_info = []
+    for job in jobs:
+        info = {}
+        info['id'] = job.id
+        info['name'] = job.name
+        info['func'] = job.func_ref
+        info['args'] = job.args
+        # 不能加这一行，否则报错：`TypeError("'CronTrigger' object is not iterable"), TypeError('vars() argument must have __dict__ attribute')`
+        # info['trigger'] = job.trigger
+        info['next_run_time'] = job.next_run_time
+        jobs_info.append(info)
+    return jobs_info
+
+
+@app.get("/task_update")
+async def task_update(job_id: str, schedule_cron: str):
+    # todo 不知道为什么报错：`'No job by the id of 4a1e3eada86143efb1ef74bc10da2607 was found'`
+    scheduler.modify_job(job_id, CronTrigger.from_crontab(schedule_cron))
+    return {"msg": "task 已更新"}
+
+
+@app.get("/task_pause")
+async def task_pause(task_id: str):
+    job = scheduler.get_job(task_id)
+    if job:
+        job.pause()
+        return {"msg": "task id 已暂停"}
+    else:
+        return {"msg": "task id 不存在"}
+
+
+@app.get("/task_delete")
+async def task_del(task_id: str):
+    job = scheduler.get_job(task_id)
+    if job:
+        job.remove()
+        return {"msg": "task id 已删除"}
+    else:
+        return {"msg": "task id 不存在"}
+
+
+@app.get("/task_resume")
+async def task_resume(task_id: str):
+    job = scheduler.get_job(task_id)
+    if job:
+        job.resume()
+        return {"msg": "task id 已恢复"}
+    else:
+        return {"msg": "task id 不存在"}
+
+
 if __name__ == '__main__':
+    import uvicorn
+
     # 日志系统基本配置
     logging.basicConfig(filename="logs/main.log", filemode="a", format="[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S", level=logging.DEBUG, encoding="utf-8")
-
-    # 获取环境变量`SCHEDULE_TYPE`
-    schedule_type = os.getenv('SCHEDULE_TYPE')
-    # 如果没有配置环境变量`SCHEDULE_TYPE`，则只执行一次
-    if not schedule_type:
-        logger.info("没有配置环境变量`SCHEDULE_TYPE`，只执行一次")
-        check_tokens()
-        # 如果这里写`exit(0)`，且`docker-compose.yml`中`restart`的值为`always`，就会一直重启容器，导致重复执行main.py
-        time.sleep(3600 * 24 * 365)
-
-    # 根据环境变量配置定时任务
-    logger.info(f"配置的定时任务类型为:{schedule_type}")
-    schedule_type_enum = ScheduleType.match_name(schedule_type)
-    if schedule_type_enum == ScheduleType.INTERVAL:
-        # 按时间间隔执行
-        interval = int(os.getenv(schedule_type_enum.env_name_of_value, 3600))  # 获取环境变量，默认间隔为3600秒
-        schedule.every(interval).seconds.do(check_tokens)
-    elif schedule_type_enum == ScheduleType.SPECIFIC_TIME:
-        # 在指定时间执行
-        specific_time = os.getenv(schedule_type_enum.env_name_of_value, '08:00')  # 获取环境变量，默认时间为"08:00"
-        schedule.every().day.at(specific_time).do(check_tokens)
-        # 下次执行时间
-        # next_run = schedule.next_run()
-        # 距离下次执行还有多少秒
-        # idle_seconds = schedule.idle_seconds()
-        # logger.info(f"距离下次执行[{next_run.strftime('%Y-%m-%d %H:%M:%S')}]还有:{idle_seconds}秒")
-    else:
-        logger.info("不支持的定时任务类型，退出！")
-        # 如果这里写`exit(1)`，且`docker-compose.yml`中`restart`的值为`always/on-failure`，就会一直重启容器，导致重复执行main.py
-        time.sleep(3600 * 24 * 365)
-
-    # 主循环，不断检查任务是否需要执行
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
+    # 启动 uvicorn
+    # uvicorn.run(app='main:app', host="127.0.0.1", port=8000, reload=True, reload_excludes=["*.log"])
+    uvicorn.run(app='main:app', host="127.0.0.1", port=8000)

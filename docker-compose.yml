@@ -24,5 +24,4 @@ services:
       SPARK_FREE_API_TOKEN: 'XX'
       METASO_FREE_API_BASE_URL: 'http://XX:8004'
       METASO_FREE_API_TOKEN: 'XX'
-      SCHEDULE_TYPE: 'specific_time'
-      SCHEDULE_JOB_SPECIFIC_TIME: '08:00'
+      SCHEDULE_CRON: '0 8 * * *'

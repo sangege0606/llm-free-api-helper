@@ -32,9 +32,7 @@
 - `ONE_API_KIMI_FREE_API_CHANNEL_ID`: `one-api`服务中配置`kimi-free-api`服务的`channel_id`
 - `ONE_API_SPARK_FREE_API_CHANNEL_ID`: `one-api`服务中配置`spark-free-api`服务的`channel_id`
 - `ONE_API_METASO_FREE_API_CHANNEL_ID`: `one-api`服务中配置`metaso-free-api`服务的`channel_id`
-- `SCHEDULE_TYPE`: 定时任务类型，支持`interval`、`specific_time`类型。如果没有配置，则只执行一次
-- `SCHEDULE_JOB_INTERVAL`: 定时任务类型为`interval`时的定时任务间隔（单位为"秒"），默认为3600
-- `SCHEDULE_JOB_SPECIFIC_TIME`: 定时任务类型为`specific_time`时的定时任务时间（格式：`HH:MM`），默认为"08:00"
+- `SCHEDULE_CRON`: 定时任务的`cron`表达式，格式参考[cron - 维基百科](https://en.wikipedia.org/wiki/Cron)。示例：`0 8 * * *`，表示每天早上8点执行。如果不配置，则只执行一次。
 
 ### 原生部署
 - 部署[LLM-Red-Team](https://github.com/LLM-Red-Team)开发的一系列`free-api`项目之后
@@ -57,14 +55,12 @@
       SPARK_FREE_API_TOKEN XX \
       METASO_FREE_API_BASE_URL http://XX:8004 \
       METASO_FREE_API_TOKEN XX \
-      SCHEDULE_TYPE specific_time \
-      SCHEDULE_JOB_SPECIFIC_TIME "08:00"
+      SCHEDULE_CRON "0 8 * * *"
   ```
 
 注意：
 1. 替换其中的变量值。
 2. 不要频繁（小于10分钟）执行。
-3. 如果需要更灵活的定时任务类型，自己写定时任务（或者使用`1panel`等管理面板）执行该`Shell`脚本，且环境变量`SCHEDULE_TYPE`不配置或配置为空即可。
 
 ### docker部署
 - 部署[LLM-Red-Team](https://github.com/LLM-Red-Team)开发的一系列`free-api`项目
@@ -98,8 +94,7 @@
         -e SPARK_FREE_API_TOKEN=XX \
         -e METASO_FREE_API_BASE_URL=http://XX:8004 \
         -e METASO_FREE_API_TOKEN=XX \
-        -e SCHEDULE_TYPE=specific_time \
-        -e SCHEDULE_JOB_SPECIFIC_TIME="08:00" \
+        -e SCHEDULE_CRON="0 8 * * *" \
         sangea0606/llm-free-api-helper /bin/bash
     ```
 
