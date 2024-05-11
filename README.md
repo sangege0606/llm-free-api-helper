@@ -106,9 +106,20 @@
   docker compose up -d
   ```
 
+### 定时任务相关的`API`接口
+接口详情见源码， 后续会使用`swagger`管理接口文档
+- `/task/list` 查询任务列表
+- `/task/update` 修改定时任务
+- `/task/pause` 暂停定时任务
+- `/task/resume` 恢复定时任务
+- `/task/delete` 删除定时任务
+- `/task/check_tokens` 检测各个token是否存活，并发送邮件通知
+
 ## TODO
 - [x] 支持多账号的存活检测
 - [x] 支持`kimi-free-api`、`spark-free-api`、`metaso-free-api`
 - [x] 提供`docker`、`docker-compose`部署方式
 - [x] 支持通过`one-api`服务自动获取各个`free-api`项目的`token`
-- [ ] 使用`FastAPI`框架
+- [x] 将`Schedule`换为支持`cron`表达式的`APScheduler`
+- [x] 使用`fastapi`重构系统，提供定时任务相关的`API`接口
+- [ ] 使用`swagger`管理接口文档

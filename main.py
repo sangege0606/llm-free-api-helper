@@ -12,6 +12,7 @@ from fastapi import FastAPI
 from enum_llm_type import LLMType
 from util import my_email_util, llm_free_api_util
 
+
 # 定义启动和关闭逻辑
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -34,6 +35,7 @@ async def lifespan(app: FastAPI):
     yield
     # 这段代码将在应用程序处理完请求后、关闭前执行。例如，这可以释放内存或 GPU 等资源。
     print("关闭后执行")
+
 
 # 将lifespan函数传递给FastAPI实例
 app = FastAPI(lifespan=lifespan)
@@ -58,6 +60,7 @@ scheduler = AsyncIOScheduler(timezone='Asia/Shanghai')
 # 日志记录器
 logger = logging.getLogger(__name__)
 
+
 def job_listener(event):
     if event.code == EVENT_JOB_ERROR:
         logger.info(f'Job {event.job_id} errored: {event.exception}')
@@ -68,13 +71,8 @@ def job_listener(event):
     else:
         logger.info(f'Job {event.job_id} executed successfully')
 
-@app.get("/")
-def read_root():
-    logger.info('API [/] called')
-    return {"Hello": "World"}
 
-
-@app.get("/check_tokens")
+@app.get("/task/check_tokens")
 def check_tokens():
     """
     检测各个 token 是否存活
@@ -160,7 +158,7 @@ def check_one_llm_type_tokens(llm_type: LLMType, base_url: str, origin_token_lis
         check_res_dict[f'[{llm_type.name}]{token}'] = live
 
 
-@app.get("/task_list")
+@app.get("/task/list")
 async def task_list():
     jobs = scheduler.get_jobs()
     jobs_info = []
@@ -177,7 +175,7 @@ async def task_list():
     return jobs_info
 
 
-@app.get("/task_update")
+@app.get("/task/update")
 async def task_update(job_id: str, schedule_cron: str):
     logger.info(f'API [/task_update] called, job_id = {job_id}, schedule_cron = {schedule_cron}')
     # 打印所有任务的job_id
@@ -189,7 +187,7 @@ async def task_update(job_id: str, schedule_cron: str):
     return {"msg": "task 已更新"}
 
 
-@app.get("/task_pause")
+@app.get("/task/pause")
 async def task_pause(task_id: str):
     job = scheduler.get_job(task_id)
     if job:
@@ -199,22 +197,22 @@ async def task_pause(task_id: str):
         return {"msg": "task id 不存在"}
 
 
-@app.get("/task_delete")
-async def task_del(task_id: str):
-    job = scheduler.get_job(task_id)
-    if job:
-        job.remove()
-        return {"msg": "task id 已删除"}
-    else:
-        return {"msg": "task id 不存在"}
-
-
-@app.get("/task_resume")
+@app.get("/task/resume")
 async def task_resume(task_id: str):
     job = scheduler.get_job(task_id)
     if job:
         job.resume()
         return {"msg": "task id 已恢复"}
+    else:
+        return {"msg": "task id 不存在"}
+
+
+@app.get("/task/delete")
+async def task_del(task_id: str):
+    job = scheduler.get_job(task_id)
+    if job:
+        job.remove()
+        return {"msg": "task id 已删除"}
     else:
         return {"msg": "task id 不存在"}
 
