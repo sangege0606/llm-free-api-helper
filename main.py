@@ -1,8 +1,10 @@
 import json
 import logging
 import os
+from contextlib import asynccontextmanager
 
 import requests
+from apscheduler.events import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR, EVENT_JOB_REMOVED, EVENT_JOB_MODIFIED
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from fastapi import FastAPI
@@ -10,7 +12,31 @@ from fastapi import FastAPI
 from enum_llm_type import LLMType
 from util import my_email_util, llm_free_api_util
 
-app = FastAPI()
+# 定义启动和关闭逻辑
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # 这段代码将在应用程序开始接收请求之前的启动过程中执行。例如，这里可以放置创建数据库连接池等操作
+    logger.info("启动前执行")
+    # 获取环境变量`SCHEDULE_CRON`
+    schedule_cron = os.getenv('SCHEDULE_CRON')
+    # 如果没有配置环境变量`SCHEDULE_CRON`，则只执行一次
+    if not schedule_cron:
+        logger.info("没有配置环境变量`SCHEDULE_CRON`，只执行一次")
+        check_tokens()
+        # 如果这里写`exit(0)`，且`docker-compose.yml`中`restart`的值为`always`，就会一直重启容器，导致重复执行main.py
+    else:
+        # 否则，使用环境变量`SCHEDULE_CRON`配置定时任务 todo 这里不设置job_id的话，reschedule_job()会报错：'No job by the id of 4a1e3eada86143efb1ef74bc10da2607 was found'
+        logger.info(f'`SCHEDULE_CRON` = {schedule_cron}')
+        scheduler.add_job(check_tokens, trigger=CronTrigger.from_crontab(schedule_cron), id='main#check_tokens')
+        scheduler.add_listener(job_listener, EVENT_JOB_EXECUTED | EVENT_JOB_MODIFIED | EVENT_JOB_REMOVED | EVENT_JOB_ERROR)
+        # 启动定时任务
+        scheduler.start()
+    yield
+    # 这段代码将在应用程序处理完请求后、关闭前执行。例如，这可以释放内存或 GPU 等资源。
+    print("关闭后执行")
+
+# 将lifespan函数传递给FastAPI实例
+app = FastAPI(lifespan=lifespan)
 
 # 调度器 todo 持久化
 # jobstores = {
@@ -32,23 +58,15 @@ scheduler = AsyncIOScheduler(timezone='Asia/Shanghai')
 # 日志记录器
 logger = logging.getLogger(__name__)
 
-@app.on_event("startup")
-def startup_event():
-    logger.info('startup_event')
-    # 获取环境变量`SCHEDULE_CRON`
-    schedule_cron = os.getenv('SCHEDULE_CRON')
-    # 如果没有配置环境变量`SCHEDULE_CRON`，则只执行一次
-    if not schedule_cron:
-        logger.info("没有配置环境变量`SCHEDULE_CRON`，只执行一次")
-        check_tokens()
-        # 如果这里写`exit(0)`，且`docker-compose.yml`中`restart`的值为`always`，就会一直重启容器，导致重复执行main.py
-        return
-
-    # 否则，使用环境变量`SCHEDULE_CRON`配置定时任务 todo 这里不设置job_id的话，reschedule_job()会报错：'No job by the id of 4a1e3eada86143efb1ef74bc10da2607 was found'
-    scheduler.add_job(check_tokens, trigger=CronTrigger.from_crontab(schedule_cron), id='main#check_tokens')
-    # 启动定时任务
-    scheduler.start()
-
+def job_listener(event):
+    if event.code == EVENT_JOB_ERROR:
+        logger.info(f'Job {event.job_id} errored: {event.exception}')
+    elif event.code == EVENT_JOB_MODIFIED:
+        logger.info(f'Job {event.job_id} was modified')
+    elif event.code == EVENT_JOB_REMOVED:
+        logger.info(f'Job {event.job_id} was removed')
+    else:
+        logger.info(f'Job {event.job_id} executed successfully')
 
 @app.get("/")
 def read_root():
@@ -207,4 +225,5 @@ if __name__ == '__main__':
     # 日志系统基本配置
     logging.basicConfig(filename="logs/main.log", filemode="a", format="[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S", level=logging.DEBUG, encoding="utf-8")
     # 启动 uvicorn。注：docker部署，host需要配置为"0.0.0.0"
-    uvicorn.run(app='main:app', host="0.0.0.0", port=8000, reload=True, reload_excludes=["*.log"])
+    # uvicorn.run(app='main:app', host="0.0.0.0", port=8000, reload=True, reload_excludes=["*.log","__pycache__"])
+    uvicorn.run(app='main:app', host="0.0.0.0", port=8000)
