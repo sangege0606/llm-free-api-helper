@@ -4,8 +4,10 @@
 
 目前有的功能：
 - 定时检测各个`free-api`项目的`token`是否存活，并发送邮件通知。
+- 支持使用`cron`表达式配置定时任务，并支持动态修改定时任务。
 - 支持原生部署、`docker`部署、`docker-compose`一键部署。
-- 支持通过`one-api`服务（需要二开`songquanpeng/one-api`，使得接口`{baseUrl}/api/channel/{id}`返回的`key`字段不为空）自动获取各个`free-api`项目的`token`
+- 支持通过`one-api`服务（需要二开`songquanpeng/one-api`，使得接口`{baseUrl}/api/channel/{id}`返回的`key`字段不为空）自动获取各个`free-api`项目的`base_url`、`token`
+- 提供将`songquanpeng/one-api`服务的所有渠道数据迁移到`martialbe/one-api`服务的脚本。
 
 ## 使用
 环境变量说明：
@@ -114,6 +116,12 @@
 - `/task/resume` 恢复定时任务
 - `/task/delete` 删除定时任务
 - `/task/check_tokens` 检测各个token是否存活，并发送邮件通知
+
+
+### 将`songquanpeng/one-api`服务的所有渠道数据迁移到`martialbe/one-api`服务
+```shell
+python one_api_migrator.py {one_api_base_url} {one_api_token} {martialbe_one_api_base_url} {martialbe_one_api_token}
+```
 
 ## TODO
 - [x] 支持多账号的存活检测
